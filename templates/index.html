@@ -1,8 +1,126 @@
+<!DOCTYPE html>
 <html>
-  <head>
-    <title>Face expression recognition</title>
-  </head>
-  <body>
-    <img id="bg" width=1200px height=900px src="{{ url_for('video_feed') }}">
-  </body>
+<head>
+	<title>Image send and paste</title>
+	<script
+			  src="https://code.jquery.com/jquery-3.3.1.min.js"
+			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js"></script>
+  <style>
+    body {
+      display: flex;
+      height: 100vh;
+      padding: 0 10vh;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      background-attachment: fixed;
+      overflow-y: scroll;
+    }
+
+    .description {
+      width: 40%;
+      height: 80%;
+    }
+
+    .media {
+      width: 480px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #camera{
+      background: black;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    #snapshot {
+      margin: 5px 0;
+      border: 1px solid lightblue;
+      background: white;
+      border-radius: 4px;
+      padding: 10px;
+      cursor: pointer;
+      width: 480px;
+    }
+
+    #snapshot:hover{
+      background: grey;
+    }
+
+
+    #result {
+      display: block;
+      background: black;
+      border-radius: 5px;
+      width: 480px;
+      height: 360px;
+    }
+
+  </style>
+</head>
+<body>
+    <div class='description'>
+      <h1>Welcome to Emotion Recognition</h1>
+      <p>1. Allow access to the camera</p>
+      <p>2. Position yourself straight in front of the camera and press 'Get Prediction'</p>
+      <p><i>Tip: the model was trained on images without facial accessories, therefore, 
+        for better accuracy please remove glasses for the snapshot</i></p>
+
+      <p><i>Note:</i> if your head position is tilted, model might not pick up the emotion 
+        and display an image with no prediction </p>
+        <p>P.S. Due to a class imbalance with the data set, best-performing expressions are:</p>
+        <p>- Happiness</p>
+        <p>- Anger</p>
+        <p>- Surprise</p>
+        <p>- Neutral</p>
+        <p></p>
+
+    </div>
+    <div class="media">
+        <div id="camera"></div>
+        <button id="snapshot" onClick="getPrediction()">Get Prediction</button>
+        <img id="result" src="https://www.emoji.co.uk/files/microsoft-emojis/smileys-people-windows10/9918-neutral-face.png">
+    </div>
+</body>
+
+<script type="text/javascript">
+  // initializing the camera
+  Webcam.set({
+    width: 480,
+    height: 360,
+    image_format: 'jpeg',
+    jpeg_quality: 90
+   });
+
+   Webcam.attach( '#camera' );
+
+  function getPrediction() {
+    // take snapshot and get image data
+    function callback(dataURI) {
+      $.ajax({
+        url: "https://simple-facial-recognition.herokuapp.com/input",
+        type:"POST",
+        data: JSON.stringify({
+          image: dataURI
+        }),
+        dataType: 'json',
+        contentType: 'application/json',
+        error: function(data) {
+          alert("Failed to get a prediction")
+        },
+        success: function(data) {
+          image = data['status'].split('\'')[1];
+          $('#result').attr('src' , 'data:image/jpeg;base64,'+image)
+        }
+      });
+    }
+
+    Webcam.snap(callback)
+}
+</script>
 </html>
